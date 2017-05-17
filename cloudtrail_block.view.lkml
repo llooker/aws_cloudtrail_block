@@ -1,69 +1,127 @@
-view: cloudtrail_block {
-  # # You can specify the table name if it's different from the view name:
-  # sql_table_name: my_schema_name.tester ;;
-  #
-  # # Define your dimensions and measures here, like this:
-  # dimension: user_id {
-  #   description: "Unique ID for each user that has ordered"
-  #   type: number
-  #   sql: ${TABLE}.user_id ;;
-  # }
-  #
-  # dimension: lifetime_orders {
-  #   description: "The total number of orders for each user"
-  #   type: number
-  #   sql: ${TABLE}.lifetime_orders ;;
-  # }
-  #
-  # dimension_group: most_recent_purchase {
-  #   description: "The date when each user last ordered"
-  #   type: time
-  #   timeframes: [date, week, month, year]
-  #   sql: ${TABLE}.most_recent_purchase_at ;;
-  # }
-  #
-  # measure: total_lifetime_orders {
-  #   description: "Use this for counting lifetime orders across many users"
-  #   type: sum
-  #   sql: ${lifetime_orders} ;;
-  # }
+view: user_login_facts {
+  derived_table: {
+    sql: select useridentity.username,
+      count(*) as number_of_console_logins,
+      sum(CASE WHEN errorcode = 'AccessDenied' THEN 1 ELSE 0 END) as failed_logins,
+      sum(CASE WHEN errorcode = 'AccessDenied' THEN 0 ELSE 1 END) as successful_logins,
+      min(eventtime) as first_login,
+      max(eventtime) as latest_login
+      from aws_optimizer.cloudtrail_logs
+      where eventname = 'ConsoleLogin'
+      GROUP BY 1
+       ;;
+  }
+
+  measure: count {
+    type: count
+    drill_fields: [detail*]
+  }
+
+  dimension: username {
+    type: string
+    primary_key: yes
+    sql: ${TABLE}.username ;;
+  }
+
+  dimension: number_of_console_logins {
+    type: number
+    hidden: yes
+    sql: ${TABLE}.number_of_console_logins ;;
+  }
+
+  dimension: failed_logins {
+    type: number
+    hidden: yes
+    sql: ${TABLE}.failed_logins ;;
+  }
+
+  dimension: successful_logins {
+    type: number
+    hidden: yes
+    sql: ${TABLE}.successful_logins ;;
+  }
+
+  dimension: first_login {
+    type: string
+    sql: ${TABLE}.first_login ;;
+  }
+
+  dimension: latest_login {
+    type: string
+    sql: ${TABLE}.latest_login ;;
+  }
+
+  measure: total_console_logins {
+    type: sum
+    sql: ${number_of_console_logins} ;;
+    value_format_name: decimal_0
+    drill_fields: [detail*]
+  }
+
+  measure: total_failed_logins {
+    type: sum
+    sql: ${failed_logins} ;;
+    value_format_name: decimal_0
+    drill_fields: [detail*]
+  }
+
+  measure: total_successful_logins {
+    type: sum
+    sql: ${successful_logins} ;;
+    value_format_name: decimal_0
+    drill_fields: [detail*]
+  }
+
+  set: detail {
+    fields: [
+      username,
+      total_console_logins,
+      total_failed_logins,
+      total_successful_logins,
+    ]
+  }
 }
 
-# view: cloudtrail_block {
-#   # Or, you could make this view a derived table, like this:
-#   derived_table: {
-#     sql: SELECT
-#         user_id as user_id
-#         , COUNT(*) as lifetime_orders
-#         , MAX(orders.created_at) as most_recent_purchase_at
-#       FROM orders
-#       GROUP BY user_id
-#       ;;
-#   }
-#
-#   # Define your dimensions and measures here, like this:
-#   dimension: user_id {
-#     description: "Unique ID for each user that has ordered"
-#     type: number
-#     sql: ${TABLE}.user_id ;;
-#   }
-#
-#   dimension: lifetime_orders {
-#     description: "The total number of orders for each user"
-#     type: number
-#     sql: ${TABLE}.lifetime_orders ;;
-#   }
-#
-#   dimension_group: most_recent_purchase {
-#     description: "The date when each user last ordered"
-#     type: time
-#     timeframes: [date, week, month, year]
-#     sql: ${TABLE}.most_recent_purchase_at ;;
-#   }
-#
-#   measure: total_lifetime_orders {
-#     description: "Use this for counting lifetime orders across many users"
-#     type: sum
-#     sql: ${lifetime_orders} ;;
-#   }
-# }
+
+
+view: user_ip_facts {
+  derived_table: {
+    sql: SELECT
+      useridentity.username,
+      count(distinct sourceipaddress) as ip_addresses
+      from aws_optimizer.cloudtrail_logs
+      group by 1
+      order by 2 desc
+      limit 50
+       ;;
+  }
+
+  suggestions: no
+
+  measure: count {
+    type: count
+    drill_fields: [detail*]
+  }
+
+  dimension: username {
+    type: string
+    primary_key: yes
+    sql: ${TABLE}.username ;;
+  }
+
+  dimension: ip_addresses {
+    type: number
+    sql: ${TABLE}.ip_addresses ;;
+    hidden: yes
+  }
+
+  measure: number_ip_addresses {
+    type: sum
+    sql: ${ip_addresses} ;;
+    value_format_name: decimal_0
+  }
+
+  set: detail {
+    fields: [username, number_ip_addresses]
+  }
+}
