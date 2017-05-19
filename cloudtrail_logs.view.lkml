@@ -47,9 +47,9 @@ view: cloudtrail_logs {
 ## TIMESTAMP function not available in Athena as of this writing, therefore we cannot leverage the dimension_group dimension type for timeframes
 ## Function for formatting to timestamp = substr(eventtime,1,10) || ' ' || substr(substr(eventtime,12,19),1,8)
 
-  dimension: eventtime_raw {
+  dimension: eventtime {
     type: string
-    hidden: yes
+#     hidden: yes
     # timeframes: [hour,date,week,month,year]
     sql: ${TABLE}.eventtime ;;
   }
@@ -58,7 +58,7 @@ view: cloudtrail_logs {
     type: string
     hidden: yes
     # timeframes: [hour,date,week,month,year]
-    sql: substr(${eventtime_raw},1,10) ;;
+    sql: substr(${eventtime},1,10) ;;
   }
 
   dimension: event_date {
@@ -95,6 +95,11 @@ view: cloudtrail_logs {
   dimension: requestparameters {
     type: string
     sql: ${TABLE}.requestparameters ;;
+  }
+
+  dimension: network_interface_id {
+    type: string
+    sql: ${TABLE}.requestparameters.networkinterfaceid ;;
   }
 
   dimension: resources {
@@ -145,20 +150,42 @@ view: cloudtrail_logs {
         ;;
   }
 
-  dimension: useragent {
-    type: string
-    sql: ${TABLE}.useragent ;;
-  }
 
-  dimension: useridentity {
+
+
+### Parsing of the nested fields (shown as JSON in useridentity column)
+
+  dimension: user_identity {
     type: string
+    group_label: "User Information"
     sql: ${TABLE}.useridentity ;;
   }
 
-  dimension: username {
+  dimension: user_agent {
     type: string
+    group_label: "User Information"
+    sql: ${TABLE}.useragent ;;
+  }
+
+  dimension: user_name {
+    type: string
+    group_label: "User Information"
     sql: ${TABLE}.useridentity.username ;;
   }
+
+  dimension: user_type {
+    type: string
+    group_label: "User Information"
+    sql: ${TABLE}.useridentity.type ;;
+  }
+
+  dimension: user_invoked_by {
+    type: string
+    group_label: "User Information"
+    sql: ${TABLE}.useridentity.invokedby ;;
+  }
+
+### End user fields
 
   dimension: vpcendpointid {
     type: string
@@ -176,7 +203,7 @@ view: cloudtrail_logs {
     ;;
   }
 
-  measure: count {
+  measure: total_events {
     type: count
     drill_fields: [eventname]
   }
@@ -219,9 +246,9 @@ view: cloudtrail_logs {
     }
   }
 
-  measure: count_of_users {
+  measure: count_of_distinct_users {
     type: count_distinct
-    sql: ${username} ;;
+    sql: ${user_name} ;;
     value_format_name: decimal_0
     }
 
