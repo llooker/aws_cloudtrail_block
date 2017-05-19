@@ -17,9 +17,11 @@ The sample use-cases below have been highlighted by the AWS team as the primary 
 
 *         _Cannot create because security groups are not included in our `request parameters` array_
 
+
 * Operational Account Activity - An important part of running workloads in AWS is understanding recurring errors, how administrators and employees are interacting with your workloads, and who or what is using root privileges in your account.
 
 *         _Need to make eventtime a timestamp if possible_
+*         _Copy Dashboard LookML once eventtime filter has been fixed and applied to the dashboard_
 
 ### Necessary Customization
 * IP Location must be updated to incorporate Geolocation services, such as those provided by MaxMind
