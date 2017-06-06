@@ -1,5 +1,3 @@
-## Athena does not support the CONCAT function, so no primary key can be created for base log table
-
 view: cloudtrail_logs {
   sql_table_name: aws_optimizer.cloudtrail_logs ;;
   suggestions: no
@@ -43,30 +41,12 @@ view: cloudtrail_logs {
     type: string
     sql: ${TABLE}.eventsource ;;
   }
-
-## TIMESTAMP function not available in Athena as of this writing, therefore we cannot leverage the dimension_group dimension type for timeframes
-## Function for formatting to timestamp = substr(eventtime,1,10) || ' ' || substr(substr(eventtime,12,19),1,8)
-
-  dimension: eventtime {
-    type: string
+  dimension_group: event_time {
+    type: time
 #     hidden: yes
-    # timeframes: [hour,date,week,month,year]
-    sql: ${TABLE}.eventtime ;;
+    timeframes: [hour,date,week,month,year,hour_of_day,day_of_week,month_name]
+    sql: from_iso8601_timestamp(${TABLE}.eventtime) ;;
   }
-
-  dimension: eventtime_trunc {
-    type: string
-    hidden: yes
-    # timeframes: [hour,date,week,month,year]
-    sql: substr(${eventtime},1,10) ;;
-  }
-
-  dimension: event_date {
-    type: string
-#     timeframes: [date,week,month,year,day_of_week]
-    sql: ${eventtime_trunc} ;;
-  }
-
   dimension: eventtype {
     type: string
     sql: ${TABLE}.eventtype ;;
