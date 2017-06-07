@@ -1,9 +1,12 @@
-### Set-up Notes
+### Set-up Steps
 
+**Cloudtrail Config**
 These instructions assume that you already have CloudTrail configured. If not, please follow the instructions outlined in these [AWS docs](http://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-getting-started.html) to complete the configuration (only takes a few min).
 
+**Athena Config**
 For instructions on how to set up Cloudtrail + Athena, please follow the steps outlined in this [AWS blog post](https://aws.amazon.com/blogs/big-data/aws-cloudtrail-and-amazon-athena-dive-deep-to-analyze-security-compliance-and-operational-activity/) (up to "Popular Use Cases"). At Amazon's suggestion, we have included some of the information, analysis, and interpreations from this blog and repeated throughout this Block.
 
+**Performance Optimization**
 Once you've completed all the initial set-up steps, you can connect Looker to your new Athena datastore and begin analysis. However, if you're working with large data sets or generally want to improve performance, there are two additional steps you should take: Partitioning your S3 buckets, and converting your data to a columnar format. Instructions for how to accomplish both of these steps are included in a seperate [AWS post](https://aws.amazon.com/blogs/big-data/analyzing-data-in-s3-using-amazon-athena/).
 
 
