@@ -188,6 +188,14 @@ view: cloudtrail_logs {
     drill_fields: [eventname]
   }
 
+  measure: total_errors {
+    type: count
+    filters: {
+      field: errormessage     ### filter on errormessage because there is always an error message during a failed login attempt
+      value: "NOT NULL"
+    }
+  }
+
   measure: total_logins {
     type: count
     drill_fields: [eventname]
