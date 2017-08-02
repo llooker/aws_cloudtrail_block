@@ -32,19 +32,19 @@ view: cloudtrail_logs {
     sql: ${TABLE}.eventid ;;
   }
 
-  dimension: eventname {
+  dimension: event_name {
     type: string
     sql: ${TABLE}.eventname ;;
   }
 
-  dimension: eventsource {
+  dimension: event_source {
     type: string
     sql: ${TABLE}.eventsource ;;
   }
   dimension_group: event_time {
     type: time
 #     hidden: yes
-    timeframes: [hour,date,week,month,year,hour_of_day,day_of_week,month_name]
+    timeframes: [minute15, minute30, hour,date,week,month,year,hour_of_day,day_of_week,month_name]
     sql: from_iso8601_timestamp(${TABLE}.eventtime) ;;
   }
   dimension: eventtype {
@@ -165,6 +165,14 @@ view: cloudtrail_logs {
     sql: ${TABLE}.useridentity.invokedby ;;
   }
 
+  dimension: assumed_user_name {
+    description: "Temporary security credentials obtained by assuming an IAM role"
+    label: "Assumed User Name"
+    type: string
+    group_label: "User Information"
+    sql: ${TABLE}.useridentity.sessioncontext.sessionissuer.userName ;;
+  }
+
 ### End user fields
 
   dimension: vpcendpointid {
@@ -176,69 +184,111 @@ view: cloudtrail_logs {
     description: "Should only be used to evaluate logins"
     type: string
     sql: CASE
-         WHEN ${eventname} = 'ConsoleLogin' AND ${errormessage} IS NULL THEN 'Success'
-         WHEN ${eventname} = 'ConsoleLogin' AND ${errormessage} IS NOT NULL THEN 'Failure'
+         WHEN ${event_name} = 'ConsoleLogin' AND ${errormessage} IS NULL THEN 'Success'
+         WHEN ${event_name} = 'ConsoleLogin' AND ${errormessage} IS NOT NULL THEN 'Failure'
          ELSE NULL
          END
     ;;
   }
 
-  measure: total_events {
-    type: count
-    drill_fields: [eventname]
+dimension: errors_dim {
+  hidden: yes
+  type: string
+  sql: CASE
+         WHEN ${errormessage} IS NOT NULL THEN 'Error'
+         WHEN ${errormessage} IS NULL THEN 'No Error'
+         ELSE NULL
+         END
+        ;;
+}
+
+
+measure: total_events {
+  type: count
+  drill_fields: [assumed_user_name, event_name, event_source, count]
+}
+
+measure: count {
+  label: "Total Events"
+  type: count
+  drill_fields: [assumed_user_name, event_name, event_source, count]
+}
+
+measure: total_errors {
+  type: count
+  filters: {
+    field: errors_dim     ### filter on errormessage because there is always an error message during a failed login attempt
+    value: "Error"
   }
+  drill_fields: [assumed_user_name, event_name, errorcode, errormessage, event_source, total_errors]
+}
 
-  measure: total_errors {
-    type: count
-    filters: {
-      field: errormessage     ### filter on errormessage because there is always an error message during a failed login attempt
-      value: "NOT NULL"
-    }
+measure: total_logins {
+  type: count
+  drill_fields: [assumed_user_name, event_name, event_source, count]
+
+  filters: {
+    field: event_name
+    value: "ConsoleLogin"
   }
+}
 
-  measure: total_logins {
-    type: count
-    drill_fields: [eventname]
+measure: total_failed_logins {
+  type: count
+  drill_fields: [event_name, assumed_user_name, event_source, total_failed_logins]
 
-    filters: {
-      field: eventname
-      value: "ConsoleLogin"
-    }
+  filters: {
+    field: event_name
+    value: "ConsoleLogin"
   }
-
-  measure: total_failed_logins {
-    type: count
-    drill_fields: [eventname]
-
-    filters: {
-      field: eventname
-      value: "ConsoleLogin"
-    }
-    filters: {
-      field: errormessage     ### filter on errormessage because there is always an error message during a failed login attempt
-      value: "NOT NULL"
-    }
+  filters: {
+    field: errors_dim     ### filter on errormessage because there is always an error message during a failed login attempt
+    value: "Error"
   }
+}
 
-  measure: total_successful_logins {
-    type: count
-    drill_fields: [eventname]
+measure: total_successful_logins {
+  type: count
+  drill_fields: [event_name,total_successful_logins]
 
-    filters: {
-      field: eventname
-      value: "ConsoleLogin"
-    }
-    filters: {
-      field: errormessage    ### filter on errormessage because there is always an error message during a failed login attempt
-      value: "NULL"
-    }
+  filters: {
+    field: event_name
+    value: "ConsoleLogin"
   }
+  filters: {
+    field: errors_dim    ### filter on errormessage because there is always an error message during a failed login attempt
+    value: "No Error"
+  }
+}
 
-  measure: count_of_distinct_users {
-    type: count_distinct
-    sql: ${user_name} ;;
-    value_format_name: decimal_0
-    }
 
+measure: count_access_denied_events {
+  type: count
+  drill_fields: [event_name, assumed_user_name, -user_name, user_invoked_by, count_access_denied_events]
 
+  filters: {
+    field: errorcode
+    value: "AccessDenied"
+  }
+}
+
+measure: count_of_distinct_call_users {
+  type: count_distinct
+  sql: ${user_name} ;;
+  drill_fields: [user_name, user_type]
+  value_format_name: decimal_0
+}
+
+measure: count_of_distinct_users {
+  type: count_distinct
+  drill_fields: [assumed_user_name, user_type]
+  sql: ${assumed_user_name} ;;
+  value_format_name: decimal_0
+}
+
+measure: errors_percent_events {
+  label: "Errors As A Percent Of Events"
+  sql: 1.00*${cloudtrail_logs.total_errors}/NULLIF(${cloudtrail_logs.count},0);;
+  type: number
+  value_format_name:percent_2}
 }
