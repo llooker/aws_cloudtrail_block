@@ -7,7 +7,7 @@ These instructions assume that you already have CloudTrail configured. If not, p
 For instructions on how to set up Cloudtrail + Athena, please follow the steps outlined in this [AWS blog post](https://aws.amazon.com/blogs/big-data/aws-cloudtrail-and-amazon-athena-dive-deep-to-analyze-security-compliance-and-operational-activity/) (up to "Popular Use Cases"). At Amazon's suggestion, we have included some of the information, analysis, and interpreations from this blog and repeated throughout this Block.
 
 **Performance Optimization**
-Once you've completed all the initial set-up steps, you can connect Looker to your new Athena datastore and begin analysis. However, if you're working with large data sets or generally want to improve performance, there are two additional steps you should take: Partitioning your S3 buckets, and converting your data to a columnar format. Instructions for how to accomplish both of these steps are included in a seperate [AWS post](https://aws.amazon.com/blogs/big-data/analyzing-data-in-s3-using-amazon-athena/).
+Once you've completed all the initial set-up steps, you can connect Looker to your new Athena datastore and begin analysis. However, if you're working with large data sets or generally want to improve performance, there are two additional steps you should take: Partitioning your S3 buckets, and converting your data to a columnar format. Instructions for how to accomplish both of these steps are included in a seperate [AWS post](https://aws.amazon.com/blogs/big-data/analyzing-data-in-s3-using-amazon-athena/). Beyond these primary levers, there are certain best practices you can follow at query time as well, outlined in this [blog post](https://aws.amazon.com/blogs/big-data/top-10-performance-tuning-tips-for-amazon-athena/).
 
 
 
@@ -80,6 +80,8 @@ LOCATION 's3://<Your CloudTrail s3 bucket>/AWSLogs/<optional – AWS_Account_ID>
 The sample use-cases below have been highlighted by the AWS team as the primary use-cases that are most applicable and valuable accross their entire customer base. Looker has also added additional use-cases based on our organization's experience using CloudTrail logs operationally.
 
 * **General Operations** - a holistic view of event activity over time, across users, resources, and regions. Use this dashboard to illicit high-level trends, then drill down into individual resources to identify opportunities for improvement and cost savings
+
+* **Error Overview** - identifying errors is a crucial component of maintaining an operational AWS environment. This dashboard offers an overview of the most common errors for users and AWS resources, as well as additional detail to help users rectify issues.
 
 * **Console Login Overview** - provides high-level overview of console login activity, including location, top users, and IP Address analysis. This dashboard can be utilized for several popular use-cases, including identifying suspicious IP logins, finding over-burdensome users, and troubleshooting login issues.
 
