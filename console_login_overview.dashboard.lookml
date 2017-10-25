@@ -160,14 +160,12 @@
     title: User Login Geolocation
     model: aws_athena_cloudtrail
     explore: cloudtrail_logs
-    type: looker_geo_choropleth
-    fields:
-    - cloudtrail_logs.ip_location
-    - cloudtrail_logs.total_events
+    type: looker_map
+    fields: [cloudtrail_logs.ip_location, cloudtrail_logs.total_events]
     filters:
       cloudtrail_logs.ip_location: "-NULL"
-    sorts:
-    - cloudtrail_logs.ip_location
+      cloudtrail_logs.event_time_date: 1 years
+    sorts: [cloudtrail_logs.ip_location]
     limit: 500
     column_limit: 50
     map: auto
@@ -180,7 +178,7 @@
     show_region_field: true
     draw_map_labels_above_data: true
     map_tile_provider: positron
-    map_position: custom
+    map_position: fit_data
     map_scale_indicator: 'off'
     map_pannable: true
     map_zoomable: true
@@ -196,8 +194,53 @@
     map_longitude: 4.833984375000001
     map_zoom: 3
     series_types: {}
-    listen:
-      Date: cloudtrail_logs.event_time_date
+    heatmap_gridlines_empty: false
+    reverse_map_value_colors: false
+    row: 0
+    col: 0
+    width: 12
+    height: 10
+
+    # model: aws_athena_cloudtrail
+    # explore: cloudtrail_logs
+    # type: looker_geo_choropleth
+    # fields:
+    # - cloudtrail_logs.ip_location
+    # - cloudtrail_logs.total_events
+    # filters:
+    #   cloudtrail_logs.ip_location: "-NULL"
+    # sorts:
+    # - cloudtrail_logs.ip_location
+    # limit: 500
+    # column_limit: 50
+    # map: auto
+    # map_projection: ''
+    # show_view_names: true
+    # quantize_colors: false
+    # map_plot_mode: points
+    # heatmap_gridlines: false
+    # heatmap_opacity: 0.5
+    # show_region_field: true
+    # draw_map_labels_above_data: true
+    # map_tile_provider: positron
+    # map_position: custom
+    # map_scale_indicator: 'off'
+    # map_pannable: true
+    # map_zoomable: true
+    # map_marker_type: circle
+    # map_marker_icon_name: default
+    # map_marker_radius_mode: proportional_value
+    # map_marker_units: meters
+    # map_marker_proportional_scale_type: linear
+    # map_marker_color_mode: fixed
+    # show_legend: true
+    # quantize_map_value_colors: false
+    # map_latitude: 32.02670629333614
+    # map_longitude: 4.833984375000001
+    # map_zoom: 3
+    # series_types: {}
+    # listen:
+    #   Date: cloudtrail_logs.event_time_date
     row: 0
     col: 0
     width: 12

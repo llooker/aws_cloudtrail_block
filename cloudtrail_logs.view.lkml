@@ -124,7 +124,8 @@ view: cloudtrail_logs {
     sql: CASE
          WHEN substr(${sourceipaddress},1,2) = '54' THEN 'China'
          WHEN substr(${sourceipaddress},1,2) = '50' THEN 'Japan'
-         WHEN substr(${sourceipaddress},1,2) = '34' THEN 'London'
+         --WHEN substr(${sourceipaddress},1,2) = '34' THEN 'London'
+         WHEN substr(${sourceipaddress},1,2) = '34' THEN 'United Kingdom'
          ELSE 'United States of America'
          END
         ;;
